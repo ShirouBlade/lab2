@@ -50,6 +50,7 @@ public:
 
 } box, particle(2.0, 0.0, g.xres/2.0, g.yres/4.0*3.0);
 
+Box box_array[5];
 Box particles[MAX_PARTICLES];
 int n = 0;
 
@@ -204,13 +205,26 @@ void make_particle(int x, int y){
 	particles[n].pos[1] = y;
 	particles[n].vel[0]=particles[n].vel[1] =0.0;
 	++n;
-
-	
-
-
-
 }
-
+void make_boxes(){
+	for (int k = 0; k < 5; k++) {
+		if (k == 0) {
+			box_array[k].w = 3*box.w;
+			box_array[k].pos[0] = box.pos[0] - 2.5*box.w;
+			box_array[k].pos[1] = box.pos[1] + 2*box.w;
+		}
+		if (k == 1){
+			box_array[k].w = 3*box.w;
+			box_array[k].pos[0] = box.pos[0];
+			box_array[k].pos[1] = box.pos[1];
+		}
+		else {
+			box_array[k].w = 3*box.w;
+			box_array[k].pos[0] = box.pos[0] + (2.5*(k-1))*box.w;
+			box_array[k].pos[1] = box.pos[1] - (2*(k-1))*box.w;
+		}
+	}
+}
 
 
 void X11_wrapper::check_mouse(XEvent *e)
@@ -287,62 +301,71 @@ void init_opengl(void)
 }
 
 void physics() {
-    	particle.vel[1] -= 0.01;
+    particle.vel[1] -= 0.01;
 	particle.pos[0] += particle.vel[0];
 	particle.pos[1] += particle.vel[1];
 	//
 	//check for collision
-	if (particle.pos[1] < (box.pos[1] + box.w/1.5) &&
-		particle.pos[1] > (box.pos[1] - box.w/1.5) && 
-		particle.pos[0] > (box.pos[0] - (2.5*box.w)) &&
-		particle.pos[0] < (box.pos[0] + (2.5*box.w)) &&
-		particle.pos[1] < (box.pos[1] + box.w/1.5)) {
-	    particle.vel[1]=0.00;
-	    particle.vel[0]+=0.007;
+	for (int k = 0; k < 5; k++) {
+    	if (particle.pos[1] < (box_array[k].pos[1] + box.w/1.5) &&
+        	particle.pos[1] > (box_array[k].pos[1] - box.w/1.5) &&
+        	particle.pos[0] > (box_array[k].pos[0] - (2.5*box.w)) &&
+        	particle.pos[0] < (box_array[k].pos[0] + (2.5*box.w)) &&
+        	particle.pos[1] < (box_array[k].pos[1] + box.w/1.5)) {
+           		
+				particle.vel[1] = 0.000;
+           		particle.vel[0] += 0.01;
+       		 
+		}
 	}
-       for (int i = 0; i<n; i++) {
+    for (int i = 0; i<n; i++) {
 
-	        particles[i].vel[1] -= 0.01;
-       		 particles[i].pos[0] += particles[i].vel[0];
-       		 particles[i].pos[1] += particles[i].vel[1];
-       		 //
-       		 //check for collision
-       		 if (particles[i].pos[1] < (box.pos[1] + box.w/1.5) &&
-               	particles[i].pos[1] > (box.pos[1] - box.w/1.5) &&
-               	particles[i].pos[0] > (box.pos[0] - (2.5*box.w)) &&
-               	particles[i].pos[0] < (box.pos[0] + (2.5*box.w)) &&
-               	particles[i].pos[1] < (box.pos[1] + box.w/1.5)) {
+	    particles[i].vel[1] -= 0.01;
+       	particles[i].pos[0] += particles[i].vel[0];
+       	particles[i].pos[1] += particles[i].vel[1];
+       	//
+       	//check for collision
+		for (int k = 0; k < 5; k++) {
+       		if (particles[i].pos[1] < (box_array[k].pos[1] + box.w/1.5) &&
+            	particles[i].pos[1] > (box_array[k].pos[1] - box.w/1.5) &&
+            	particles[i].pos[0] > (box_array[k].pos[0] - (2.5*box.w)) &&
+            	particles[i].pos[0] < (box_array[k].pos[0] + (2.5*box.w)) &&
+            	particles[i].pos[1] < (box_array[k].pos[1] + box.w/1.5)) {
            		
 				particles[i].vel[1] = 0.000;
-           		particles[i].vel[0] += 0.007;
+           		particles[i].vel[0] += 0.01;
        		 
-			 }
+			}
+		}
 
-       		 if (particles[i].pos[1] < ((box.pos[1] + 2*box.w) + box.w/1.5) &&
-               	particles[i].pos[1] > ((box.pos[1] + 2*box.w) - box.w/1.5) &&
-               	particles[i].pos[0] > ((box.pos[0] - 2.5*box.w) - (2.5*box.w)) &&
-               	particles[i].pos[0] < ((box.pos[0] - 2.5*box.w) + (2.5*box.w)) &&
-               	particles[i].pos[1] < ((box.pos[1] + 2*box.w) + box.w/1.5)) {
+
+		for (float j = 0; j < 90; j += 0.5) {
+
+       		if (particles[i].pos[1] < ((box.pos[1] - 11*box.w) + 3*box.w*sin(j)) &&
+				particles[i].pos[1] > ((box.pos[1] - 11*box.w) - 3*box.w*sin(j)) &&
+               	particles[i].pos[0] < ((box.pos[0] + 12*box.w) + 3*box.w*cos(j)) &&
+				particles[i].pos[0] > ((box.pos[0] + 12*box.w) - 3*box.w*cos(j)) &&
+               	particles[i].pos[1] < ((box.pos[1] - 11*box.w) + 3*box.w*sin(j)) ) {
            		
-				particles[i].vel[1]=0.000;
-           		particles[i].vel[0]+=0.007;
-       		 
-			 }
-
-       		 if (particles[i].pos[1] < ((box.pos[1] - 2*box.w) + box.w/1.5) &&
-               	particles[i].pos[1] > ((box.pos[1] - 2*box.w) - box.w/1.5) &&
-               	particles[i].pos[0] > ((box.pos[0] + 2.5*box.w) - (2.5*box.w)) &&
-               	particles[i].pos[0] < ((box.pos[0] + 2.5*box.w) + (2.5*box.w)) &&
-               	particles[i].pos[1] < ((box.pos[1] - 2*box.w) + box.w/1.5)) {
+				particles[i].vel[1] = 0.0;
+           		particles[i].vel[0] += 0.01;
+			}
+		}
+        for (float g = 90; g < 180; g += 0.5) {
+			if (particles[i].pos[1] < ((box.pos[1] - 11*box.w) + 3*box.w*sin(g)) &&
+				particles[i].pos[1] > ((box.pos[1] - 11*box.w) - 3*box.w*sin(g)) &&
+				particles[i].pos[0] < ((box.pos[0] + 12*box.w) + 3*box.w*cos(g)) &&
+               	particles[i].pos[0] > ((box.pos[0] + 12*box.w) - 3*box.w*cos(g)) &&
+               	particles[i].pos[1] > ((box.pos[1] - 11*box.w) - 3*box.w*sin(g))) {
            		
-				particles[i].vel[1]=0.000;
-           		particles[i].vel[0]+=0.007;
+				particles[i].vel[1] = 0.0;
+           		particles[i].vel[0] -= 0.01;
        		 
-			 }
+			}
+	   	}
+		
 
-
-
-		 if (particles[i].pos[1]< 0.0) {
+		if (particles[i].pos[1]< 0.0) {
 #define OPT_1
 #ifndef OPT_1
 			//This code optimise below
@@ -351,7 +374,7 @@ void physics() {
 #else //OPT_1
 		 	particles[i]= particles[--n];
 #endif //OPT_1
-		 }
+		}
 	}
 
 
@@ -359,82 +382,34 @@ void physics() {
 
 void render()
 {
-
+	make_boxes();
 	//
 	glClear(GL_COLOR_BUFFER_BIT);
 	//Draw box.
-	glPushMatrix();
-	glColor3ub(150, 200, 120);
-	glTranslatef((box.pos[0] - 2.5*box.w), (box.pos[1] + 2*box.w), 0.0f);
-	glBegin(GL_QUADS);
-		glVertex2f(-(3*box.w), -box.w/2);
-		glVertex2f(-(3*box.w),  box.w/2);
-		glVertex2f( (3*box.w),  box.w/2);
-		glVertex2f( (3*box.w), -box.w/2);
-	glEnd();
-	glPopMatrix();
+	for(int l = 0; l < 5; l++) {
+		glPushMatrix();
+		glColor3ub(150, 200, 120);
+		glTranslatef(box_array[l].pos[0], box_array[l].pos[1], 0.0f);
+		glBegin(GL_QUADS);
+			glVertex2f(-(box_array[l].w), -box.w/2);
+			glVertex2f(-(box_array[l].w),  box.w/2);
+			glVertex2f( (box_array[l].w),  box.w/2);
+			glVertex2f( (box_array[l].w), -box.w/2);
+		glEnd();
+		glPopMatrix();
+	}
 
-	//Draw box.
-	glPushMatrix();
-	glColor3ub(150, 200, 120);
-	glTranslatef(box.pos[0], box.pos[1], 0.0f);
-	glBegin(GL_QUADS);
-		glVertex2f(-(3*box.w), -box.w/2);
-		glVertex2f(-(3*box.w),  box.w/2);
-		glVertex2f( (3*box.w),  box.w/2);
-		glVertex2f( (3*box.w), -box.w/2);
-	glEnd();
-	glPopMatrix();
-
-	//Draw box.
-	glPushMatrix();
-	glColor3ub(150, 200, 120);
-	glTranslatef((box.pos[0] + 2.5*box.w), (box.pos[1] - 2*box.w), 0.0f);
-	glBegin(GL_QUADS);
-		glVertex2f(-(3*box.w), -box.w/2);
-		glVertex2f(-(3*box.w),  box.w/2);
-		glVertex2f( (3*box.w),  box.w/2);
-		glVertex2f( (3*box.w), -box.w/2);
-	glEnd();
-	glPopMatrix();
-	
-	//Draw box.
-	glPushMatrix();
-	glColor3ub(150, 200, 120);
-	glTranslatef((box.pos[0] + 4.5*box.w), (box.pos[1] - 4*box.w), 0.0f);
-	glBegin(GL_QUADS);
-		glVertex2f(-(3*box.w), -box.w/2);
-		glVertex2f(-(3*box.w),  box.w/2);
-		glVertex2f( (3*box.w),  box.w/2);
-		glVertex2f( (3*box.w), -box.w/2);
-	glEnd();
-	glPopMatrix();
-
-	//Draw box.
-	glPushMatrix();
-	glColor3ub(150, 200, 120);
-	glTranslatef((box.pos[0] + 6.5*box.w), (box.pos[1] - 6*box.w), 0.0f);
-	glBegin(GL_QUADS);
-		glVertex2f(-(3*box.w), -box.w/2);
-		glVertex2f(-(3*box.w),  box.w/2);
-		glVertex2f( (3*box.w),  box.w/2);
-		glVertex2f( (3*box.w), -box.w/2);
-	glEnd();
-	glPopMatrix();
 	float x, y;
 	glPushMatrix();
 	glColor3ub(150, 200, 120);
-	glTranslatef((box.pos[0] + 11*box.w), (box.pos[1] - 11*box.w), 0.0f);
+	glTranslatef((box.pos[0] + 12*box.w), (box.pos[1] - 11*box.w), 0.0f);
 	glBegin(GL_TRIANGLES);
-	for (float i = 0; i < 360;) {
-		x = 3*box.w*cos(i);
-		y = 3*box.w*sin(i);
+	for (float j = 0; j < 360;) {
+		x = 3*box.w*cos(j);
+		y = 3*box.w*sin(j);
 		glVertex2f( x, y );
 		glVertex2f( 0, 0);
-		i += 0.5;
-
-
-
+		j += 0.5;
 	}
 	glEnd();
 	glPopMatrix();
@@ -442,29 +417,40 @@ void render()
 
 	//draw particle
 	glPushMatrix();
-        glColor3ub(150, 160, 255);
-        glTranslatef(particle.pos[0], particle.pos[1], 0.0f);
-        glBegin(GL_QUADS);
-                glVertex2f(-particle.w, -particle.w);
-                glVertex2f(-particle.w,  particle.w);
-                glVertex2f( particle.w,  particle.w);
-                glVertex2f( particle.w, -particle.w);
-        glEnd();
-        glPopMatrix();
+    glColor3ub(150, 160, 255);
+    glTranslatef(particle.pos[0], particle.pos[1], 0.0f);
+    glBegin(GL_QUADS);
+        glVertex2f(-particle.w, -particle.w);
+        glVertex2f(-particle.w,  particle.w);
+        glVertex2f( particle.w,  particle.w);
+        glVertex2f( particle.w, -particle.w);
+    glEnd();
+    glPopMatrix();
 
-	        //draw particles
+	//draw particles
 	for (int i = 0; i<n; i++) {
-	    	 glPushMatrix();
-       		 glColor3ub(150, 160, 255);
-		 glTranslatef(particles[i].pos[0], particles[i].pos[1], 0.0f);
-       		 glBegin(GL_QUADS);
-               		glVertex2f(-particles[i].w, -particles[i].w);
-                	glVertex2f(-particles[i].w,  particles[i].w);
-                	glVertex2f( particles[i].w,  particles[i].w);
-                	glVertex2f( particles[i].w, -particles[i].w);
-       		 glEnd();
-        	 glPopMatrix();
+	    glPushMatrix();
+       	glColor3ub(150, 160, 255);
+		glTranslatef(particles[i].pos[0], particles[i].pos[1], 0.0f);
+       	glBegin(GL_QUADS);
+            glVertex2f(-particles[i].w, -particles[i].w);
+            glVertex2f(-particles[i].w,  particles[i].w);
+            glVertex2f( particles[i].w,  particles[i].w);
+            glVertex2f( particles[i].w, -particles[i].w);
+       	glEnd();
+        glPopMatrix();
 	}
+	if (g.RB == 1) {
+		
+		make_particle((box.pos[0] - 2.5*box.w), (box.pos[1] + 4*box.w));
+		
+	}
+	if (g.RB == 2) {
+		g.RB = 0;
+	}
+	
+	
+	
 //	pos[0] += dir;
 //	if (pos[0] >= (g.xres-w)) {
 //		pos[0] = (g.xres-w);
