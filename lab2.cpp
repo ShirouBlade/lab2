@@ -1,5 +1,5 @@
 //modified by: Danny Simpson
-//date: Aug 31, 2022
+//date: Sep 09, 2022
 //
 //author: Gordon Griesel
 //date: Spring 2022
@@ -16,6 +16,8 @@ using namespace std;
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
 #include <GL/glx.h>
+#include "log.h"
+#include "fonts.h"
 
 const int MAX_PARTICLES = 1000;
 //some structures
@@ -302,6 +304,8 @@ void init_opengl(void)
     glOrtho(0, g.xres, 0, g.yres, -1, 1);
     //Set the screen background color
     glClearColor(0.1, 0.1, 0.1, 1.0);
+    glEnable(GL_TEXTURE_2D);
+    initialize_fonts();
 }
 
 void physics()
@@ -309,6 +313,7 @@ void physics()
     particle.vel[1] -= 0.01;
     particle.pos[0] += particle.vel[0];
     particle.pos[1] += particle.vel[1];
+    int velx = 0;
     //
     //check for collision
     for (int k = 0; k < 5; k++) {
@@ -319,7 +324,7 @@ void physics()
             particle.pos[1] < (box_array[k].pos[1] + box.w/1.5)) {
                 
                 particle.vel[1] = 0.000;
-                particle.vel[0] += 0.01;
+                particle.vel[0] += 0.004;
         }
     }
     for (int i = 0; i<n; i++) {
@@ -336,39 +341,25 @@ void physics()
                 particles[i].pos[1] < (box_array[k].pos[1] + box.w/1.5)) {
            	    
                 particles[i].vel[1] = 0.000;
-                particles[i].vel[0] += 0.01;
+                particles[i].vel[0] += 0.004;
+                velx = particles[i].vel[0] - 0.004;
             }
         }
-        for (float j = 0; j < 90; j += 0.5) {
-            if (particles[i].pos[1] < ((box.pos[1] - 11*box.w) + 
-                                                            3*box.w*sin(j)) &&
-                particles[i].pos[1] > ((box.pos[1] - 11*box.w) - 
-                                                            3*box.w*sin(j)) &&
-                particles[i].pos[0] < ((box.pos[0] + 12*box.w) + 
-                                                            3*box.w*cos(j)) &&
-                particles[i].pos[0] > ((box.pos[0] + 12*box.w) - 
-                                                            3*box.w*cos(j)) &&
-                particles[i].pos[1] < ((box.pos[1] - 11*box.w) + 
-                                                            3*box.w*sin(j)) ) {
-                particles[i].vel[1] = 0.0;
-                particles[i].vel[0] += 0.01;
+        
+        int dx = particles[i].pos[0] - (box.pos[0] + 12*box.w);
+        int dy = particles[i].pos[1] - (box.pos[1] - 11*box.w);
+        int dist = sqrt(dx*dx + dy*dy);
+        if (dist <= 3*box.w) {
+            particles[i].vel[1] = 0.0;
+            if (particles[i].pos[0] >= (box.pos[0] + 12*box.w))
+                particles[i].vel[0] += 0.004;
+            if (particles[i].pos[0] < (box.pos[0] + 12*box.w)) {
+                
+                particles[i].vel[0] = velx - 0.1;
+                
             }
         }
-        for (float g = 90; g < 180; g += 0.5) {
-            if (particles[i].pos[1] < ((box.pos[1] - 11*box.w) + 
-                                                            3*box.w*sin(g)) &&
-                particles[i].pos[1] > ((box.pos[1] - 11*box.w) - 
-                                                            3*box.w*sin(g)) &&
-                particles[i].pos[0] < ((box.pos[0] + 12*box.w) + 
-                                                            3*box.w*cos(g)) &&
-                particles[i].pos[0] > ((box.pos[0] + 12*box.w) - 
-                                                            3*box.w*cos(g)) &&
-               	particles[i].pos[1] > ((box.pos[1] - 11*box.w) - 
-                                                            3*box.w*sin(g))) {
-                particles[i].vel[1] = 0.0;
-                particles[i].vel[0] -= 0.01;
-            }
-        }		
+        	
         if (particles[i].pos[1]< 0.0) {
 #define OPT_1
 #ifndef OPT_1
@@ -388,7 +379,7 @@ void render()
     float number = 0;
     number = rand() % 20;
     int count = 0;
-    
+    Rect r;
     if (count%2 == 0)
         make_particle((box.pos[0] - 2.5*box.w + number), 
                                                       (box.pos[1] + 4*box.w));
@@ -410,6 +401,19 @@ void render()
             glVertex2f( (box_array[l].w), -box.w/2);
         glEnd();
         glPopMatrix();
+        r.bot = box_array[l].pos[1] - box.w/4;
+        r.left = box_array[l].pos[0];
+        r.center = box_array[l].w;
+        if (l == 0)
+            ggprint8b(&r, 30, 0x00ffff00, "Requirments");
+        if (l == 1)
+            ggprint8b(&r, 30, 0x00ffff00, "Design");
+        if (l == 2)
+            ggprint8b(&r, 30, 0x00ffff00, "Coding");
+        if (l == 3)
+            ggprint8b(&r, 30, 0x00ffff00, "Testing");
+        if (l == 4)
+            ggprint8b(&r, 30, 0x00ffff00, "maintanence");
     }
     float x, y;
     glPushMatrix();
