@@ -17,22 +17,22 @@ using namespace std;
 #include <X11/keysym.h>
 #include <GL/glx.h>
 
-const int MAX_PARTICLES = 10;
+const int MAX_PARTICLES = 1000;
 //some structures
 class Global {
 public:
-    int xres, yres;
-    int RB = 0;
-    Global();
+        int xres, yres;
+		int RB = 0;
+        Global();
 } g;
 
 
 class Box {
 public:
     float w;
-    float dir;
+        float dir;
     float vel[2];
-    float pos[2];
+       	float pos[2];
     Box() {
         w = 20.0f;
         dir = 25.0f;
@@ -202,12 +202,13 @@ void make_particle(int x, int y)
 {
     if (n>=MAX_PARTICLES)
         return;
-    particles[n].w = 2.0;
+    particles[n].w = 3.0;
     particles[n].pos[0] = x;
     particles[n].pos[1] = y;
     particles[n].vel[0]=particles[n].vel[1] =0.0;
     ++n;
     render();
+    usleep(60);
 }
 void make_boxes()
 {
@@ -259,20 +260,6 @@ void X11_wrapper::check_mouse(XEvent *e)
         }
         if (e->xbutton.button==3) {
             //Right button was pressed.
-            g.RB++;
-            if (g.RB == 1) {
-                float number;
-                for (int count = 0; count > (n - 1); count++) {
-                    number = rand() % 20;
-                    if (count%2 == 0)
-                        make_particle((box.pos[0] - 2.5*box.w + number), (box.pos[1] + 4*box.w));
-                    else
-                        make_particle((box.pos[0] - 2.5*box.w - number), (box.pos[1] + 4*box.w));
-                }	
-            }
-            if (g.RB == 2) {
-                g.RB = 0;
-            }
             return;
         }
     }
@@ -353,21 +340,31 @@ void physics()
             }
         }
         for (float j = 0; j < 90; j += 0.5) {
-            if (particles[i].pos[1] < ((box.pos[1] - 11*box.w) + 3*box.w*sin(j)) &&
-                particles[i].pos[1] > ((box.pos[1] - 11*box.w) - 3*box.w*sin(j)) &&
-                particles[i].pos[0] < ((box.pos[0] + 12*box.w) + 3*box.w*cos(j)) &&
-                particles[i].pos[0] > ((box.pos[0] + 12*box.w) - 3*box.w*cos(j)) &&
-                particles[i].pos[1] < ((box.pos[1] - 11*box.w) + 3*box.w*sin(j)) ) {
+            if (particles[i].pos[1] < ((box.pos[1] - 11*box.w) + 
+                                                            3*box.w*sin(j)) &&
+                particles[i].pos[1] > ((box.pos[1] - 11*box.w) - 
+                                                            3*box.w*sin(j)) &&
+                particles[i].pos[0] < ((box.pos[0] + 12*box.w) + 
+                                                            3*box.w*cos(j)) &&
+                particles[i].pos[0] > ((box.pos[0] + 12*box.w) - 
+                                                            3*box.w*cos(j)) &&
+                particles[i].pos[1] < ((box.pos[1] - 11*box.w) + 
+                                                            3*box.w*sin(j)) ) {
                 particles[i].vel[1] = 0.0;
                 particles[i].vel[0] += 0.01;
             }
         }
         for (float g = 90; g < 180; g += 0.5) {
-            if (particles[i].pos[1] < ((box.pos[1] - 11*box.w) + 3*box.w*sin(g)) &&
-                particles[i].pos[1] > ((box.pos[1] - 11*box.w) - 3*box.w*sin(g)) &&
-                particles[i].pos[0] < ((box.pos[0] + 12*box.w) + 3*box.w*cos(g)) &&
-                particles[i].pos[0] > ((box.pos[0] + 12*box.w) - 3*box.w*cos(g)) &&
-               	particles[i].pos[1] > ((box.pos[1] - 11*box.w) - 3*box.w*sin(g))) {
+            if (particles[i].pos[1] < ((box.pos[1] - 11*box.w) + 
+                                                            3*box.w*sin(g)) &&
+                particles[i].pos[1] > ((box.pos[1] - 11*box.w) - 
+                                                            3*box.w*sin(g)) &&
+                particles[i].pos[0] < ((box.pos[0] + 12*box.w) + 
+                                                            3*box.w*cos(g)) &&
+                particles[i].pos[0] > ((box.pos[0] + 12*box.w) - 
+                                                            3*box.w*cos(g)) &&
+               	particles[i].pos[1] > ((box.pos[1] - 11*box.w) - 
+                                                            3*box.w*sin(g))) {
                 particles[i].vel[1] = 0.0;
                 particles[i].vel[0] -= 0.01;
             }
@@ -388,6 +385,17 @@ void physics()
 void render()
 {
     make_boxes();
+    float number = 0;
+    number = rand() % 20;
+    int count = 0;
+    
+    if (count%2 == 0)
+        make_particle((box.pos[0] - 2.5*box.w + number), 
+                                                      (box.pos[1] + 4*box.w));
+    else
+        make_particle((box.pos[0] - 2.5*box.w - number), 
+                                                      (box.pos[1] + 4*box.w));
+
     //
     glClear(GL_COLOR_BUFFER_BIT);
     //Draw box.
@@ -433,7 +441,10 @@ void render()
     //draw particles
     for (int i = 0; i<n; i++) {
 	    glPushMatrix();
-       	glColor3ub(150, 160, 255);
+	    if (i % 2 == 0)
+       	    glColor3ub(150, 160, 255);
+       	else
+       	    glColor3ub(120, 130, 255);
         glTranslatef(particles[i].pos[0], particles[i].pos[1], 0.0f);
         glBegin(GL_QUADS);
             glVertex2f(-particles[i].w, -particles[i].w);
@@ -443,26 +454,5 @@ void render()
        	glEnd();
         glPopMatrix();
     }
-//    if (g.RB == 1) {
-//        int number;
-//        for (int count = 0; count > (n - 1); count++) {
-//            number = rand() % 60;
-//            if (count%2 == 0)
-//                make_particle((box.pos[0] - 2.5*box.w + number), (box.pos[1] + 4*box.w));
-//            else
-//                make_particle((box.pos[0] - 2.5*box.w - number), (box.pos[1] + 4*box.w));
-//        }	
-//    }
-//    if (g.RB == 2) {
-//        g.RB = 0;
-//    }
-//	pos[0] += dir;
-//	if (pos[0] >= (g.xres-w)) {
-//		pos[0] = (g.xres-w);
-//		dir = -dir;
-//	}
-//	if (pos[0] <= w) {
-//		pos[0] = w;
-//		dir = -dir;
-//	}
+    count++;
 }
